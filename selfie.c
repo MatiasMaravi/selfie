@@ -11855,7 +11855,6 @@ uint64_t mipster(uint64_t* to_context) {
       return get_exit_code(from_context);
     else {
       
-      to_context = from_context; 
       next_context_s = get_next_context(from_context);
       if (next_context_s == (uint64_t*) 0)
         to_context = used_contexts;
