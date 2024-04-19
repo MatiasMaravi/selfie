@@ -11841,6 +11841,7 @@ uint64_t mipster(uint64_t* to_context) {
   uint64_t timeout;
   uint64_t* from_context;
   uint64_t* next_context_s;
+
   timeout = TIMESLICE;
 
   while (1) {
@@ -11854,13 +11855,12 @@ uint64_t mipster(uint64_t* to_context) {
     } else if (handle_exception(from_context) == EXIT)
       return get_exit_code(from_context);
     else {
-      
       next_context_s = get_next_context(from_context);
-      if (next_context_s == (uint64_t*) 0)
-        to_context = used_contexts;
-      else
+      if(next_context_s != (uint64_t*) 0){
         to_context = next_context_s;
-
+      }else{
+        to_context = used_contexts;
+      }
       timeout = TIMESLICE;
     }
   }
@@ -11876,15 +11876,14 @@ uint64_t hypster(uint64_t* to_context) {
     if (handle_exception(from_context) == EXIT)
       return get_exit_code(from_context);
     else{
-
+      // TODO: scheduler should go here
       next_context_s = get_next_context(from_context);
-      if (next_context_s == (uint64_t*) 0)
-        to_context = used_contexts;
-      else
+      if(next_context_s != (uint64_t*) 0){
         to_context = next_context_s;
-
+      }else{
+        to_context = used_contexts;
+      }
     }
-      
       
   }
 }
@@ -11993,9 +11992,7 @@ uint64_t mobster(uint64_t* to_context) {
   // does not handle page faults, relies on fancy hypsters to do that
   return minmob(to_context);
 }
-
-uint64_t selfie_run_mipster_os(uint64_t machine){
-
+uint64_t selfie_run_os(uint64_t machine) {
   uint64_t exit_code;
   uint64_t context;
   uint64_t n;
@@ -12029,28 +12026,25 @@ uint64_t selfie_run_mipster_os(uint64_t machine){
 
     machine = MIPSTER;
   }
-  n = atoi(peek_argument(0));
-  context=0;
+
+
 
   reset_interpreter();
   reset_profiler();
   reset_microkernel();
-  if(n < 32){
-    init_memory(n*2);
-  }else{
-    init_memory(64);
-  }
   
-
+  n = atoi(get_argument());
+  init_memory(64);
+  context = 0;
   while(context < n){
     current_context = create_context(MY_CONTEXT, 0);
     boot_loader(current_context);
-  
-    context=context+1;
+    context = context + 1;
   }
+  
+  run = 1;
 
-    run=1;
-    printf("%s: %lu-bit %s executing %lu-bit RISC-U binary %s with %luMB physical memory", selfie_name,
+  printf("%s: %lu-bit %s executing %lu-bit RISC-U binary %s with %luMB physical memory", selfie_name,
     SIZEOFUINT64INBITS,
     (char*) *(MACHINES + machine),
     WORDSIZEINBITS,
@@ -12108,9 +12102,7 @@ uint64_t selfie_run_mipster_os(uint64_t machine){
   printf("%s: ################################################################################\n", selfie_name);
 
   return exit_code;
-
-} 
-
+}
 uint64_t selfie_run(uint64_t machine) {
   uint64_t exit_code;
 
@@ -12316,9 +12308,9 @@ uint64_t selfie(uint64_t extras) {
         if (string_compare(argument, "-m"))
           return selfie_run(MIPSTER);
         else if (string_compare(argument, "-x"))
-          return selfie_run_mipster_os(MIPSTER);
-        else if (string_compare(argument,"-z"))
-          return selfie_run_mipster_os(HYPSTER);
+          return selfie_run_os(MIPSTER);
+        else if (string_compare(argument, "-z"))
+          return selfie_run_os(HYPSTER);
         else if (string_compare(argument, "-d"))
           return selfie_run(DIPSTER);
         else if (string_compare(argument, "-r"))
